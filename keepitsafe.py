@@ -1,7 +1,7 @@
 import os
 import sqlite3 as sql
 import getpass
-from hashlib import md5 // will be change with sha-256 or sha-512 for security reasons in next commit
+from hashlib import md5  #will be change with sha-256 or sha-512 for security reasons in next commit
 from Crypto import Random
 from Crypto.Cipher import AES
 username = getpass.getuser()
@@ -35,7 +35,7 @@ else:
         else:
             upassword = raw_input("Your password is wrong please try again: ")
 if (len(upassword) % 16 != 0):
-    if len(upassword)<16:
+    if len(upassword)<16: #will be moved to function
         limit=16-len(upassword)
     else:
         limit=len(upassword)-16
@@ -51,7 +51,7 @@ while(selection!=3):
         if(length==0):
             print"You don't have saved login info"
         else:
-            link.execute("SELECT count(*) FROM passwords")
+            link.execute("SELECT count(*) FROM passwords") #queries will be changed with query list or query variables
             (length,)=link.fetchone()
             link.execute("select * from passwords")
             for i in range(length):
@@ -59,7 +59,7 @@ while(selection!=3):
                 for j in range(16):
                     iv=password[:16]
                 cipher = AES.new(upassword, AES.MODE_CBC, iv)
-                password=cipher.decrypt(password[16:])
+                password=cipher.decrypt(password[16:]) 
                 print str(i+1)+".  Service: "+service+"  Username: "+username+"  Password: "+password
     elif(selection==2):
         service=raw_input("service name: ")
@@ -68,7 +68,7 @@ while(selection!=3):
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(upassword, AES.MODE_CBC, iv)
         if(len(password)%16!=0):
-            if len(password)<16:
+            if len(password)<16: #will be moved to function
                 limit=16-len(password)
             else:
                 limit=len(password)-16
