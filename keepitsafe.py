@@ -29,7 +29,7 @@ def LogInToProgram(link,username,uPassword):
         link.execute("select password from localuser where username= ? ", (username,))
         (data,) = link.fetchone()
         if (data == md5(uPassword).hexdigest()):
-            print("Login Successful")
+            print("Login Successful\n")
             return True
         else:
             return False
@@ -38,23 +38,23 @@ def ShowLoginInfo(link,id,key):
     link.execute("SELECT COUNT(*) FROM passwords")
     (length,) = link.fetchone()
     if (length == 0):
-        print"You don't have saved login info"
+        sys.exit("You don't have saved login info")
     else:
         if (len(key) % 16 != 0):
             key = KeyPadding(key)
         link.execute("SELECT count(*) FROM passwords where u_id= ? ",(id,))
         (length,) = link.fetchone()
         link.execute("select * from passwords")
-
+        print("Your passwords kept safe with keepitsafe")
         for i in range(length):
             (service, username, password,id) = link.fetchone()
             iv = password[:16]
             cipher = AES.new(key, AES.MODE_CBC, iv)
             password = cipher.decrypt(password[16:])
-            print str(i + 1) + ".  Service: " + service + "  Username: " + username + "  Password: " + password
+            print "Record Number: "+str(i + 1) + ".  Service: " + service + "  Username: " + username + "  Password: " + password
 
 def NewLoginInfo(link,id,uPassword):
-    service = raw_input("service name: ")
+    service = raw_input("Service name: ")
     username = raw_input("Username: ")
     password = raw_input("Password: ")
     iv = Random.new().read(AES.block_size)
@@ -76,12 +76,52 @@ def GetId(link,username):
     link.execute("select id from localuser where username=?", (username,))
     (id,) = link.fetchone()
     return id
-if sys.argv[1]=="-h":
-    print "-s for show all login info you've saved \n-n for enter new login info"
-    sys.exit()
+def DeleteLoginInfo(link,id):
+    selection=eval(raw_input("Enter the record number you want to delete: "))
+    link.execute("SELECT count(*) FROM passwords where u_id= ? ", (id,))
+    (length,)=link.fetchone()
+    if selection>length:
+        sys.exit("Record number you've entered is higher than saved login info count")
+    elif(selection<=0):
+        sys.exit("Wrong record number")
+    else:
+        link.execute("select * from passwords where u_id=?",(id,))
+        i=0
+        while(i<selection):
+            (s,u,p,u_id)=link.fetchone()
+            i=i+1
+        link.execute("delete from passwords where service=? and username=? and password=? and u_id=?",(s,u,p,u_id))
+        db.commit()
+def UpdateLoginInfo(link,id,uPassword):
+    selection = eval(raw_input("Enter the record number you want to update: "))
+    link.execute("SELECT count(*) FROM passwords where u_id= ? ", (id,))
+    (length,) = link.fetchone()
+    if selection > length:
+        sys.exit("Record number you've entered is higher than saved login info count")
+    elif (selection <= 0):
+        sys.exit("Wrong record number")
+    else:
+        link.execute("select * from passwords where u_id=?",(id,))
+        i=0
+        while(i<selection):
+            (s,u,p,u_id)=link.fetchone()
+            i=i+1
+        service = raw_input("Service name: ")
+        username = raw_input("Username: ")
+        password = raw_input("Password: ")
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(uPassword, AES.MODE_CBC, iv)
+        if (len(password) % 16 != 0):
+            password = InputPadding(password)
+        cipherpassword = cipher.encrypt(password)
+        link.execute("update passwords set service=? , username=?, password=? where service=? and username=? and password=? and u_id=?", (service,username,iv+cipherpassword,s, u, p, u_id))
+        db.commit()
+        print"Your Login Info Has Been Saved"
+
+
 username = getpass.getuser()
 homedir = os.environ['HOME']
-db=sql.connect(homedir+'/new/pass')
+db=sql.connect(homedir+'/.pass')
 db.text_factory = str
 link=db.cursor()
 link.execute("CREATE TABLE IF NOT EXISTS passwords (service,username,password,u_id) ") #Username and password information stored in Keep it Safe program.
@@ -90,12 +130,16 @@ if(len(sys.argv)==1):
     print "You must run the program with parameters check keepitsafe -h"
 elif(len(sys.argv)>2):
     print "Too many parameters check keepitsafe -h"
+elif sys.argv[1]=="-h":
+    sys.exit("-s for show all login info you've saved \n-n for enter new login info\n-d for delete login info you've saved \n-u for update login info you've saved")
 else:
     link.execute("SELECT count(*) FROM localuser where username=?", (username,))
     (length,) = link.fetchone()
     if length == 0:
         print "You are not registered with this user\n  "
         uPassword = raw_input("Please enter new users password: ")
+        while(len(uPassword)>32):
+            uPassword = raw_input("Your password can not be longer than 32 characters\nPlease enter new users password: ")
         NewUser(link,username,uPassword)
     else:
         print"Welcome To Keep it Safe, Your Passwords encrypted with AES \n"
@@ -103,7 +147,7 @@ else:
         session = LogInToProgram(link,username,uPassword)
         while (session == False):
             uPassword = raw_input("Your password is wrong please try again: ")
-            session = LogInToProgram( link,userame, uPassword)
+            session = LogInToProgram( link,username, uPassword)
     id = GetId(link, username)
     if (len(uPassword)%16!=0):
         uPassword=KeyPadding(uPassword)
@@ -111,6 +155,13 @@ else:
         ShowLoginInfo(link,id,uPassword)
     elif sys.argv[1] == "-n":
         NewLoginInfo(link,id,uPassword)
+    elif sys.argv[1] == "-d":
+        ShowLoginInfo(link, id, uPassword)
+        DeleteLoginInfo(link,id)
+    elif sys.argv[1] == "-u":
+        ShowLoginInfo(link, id, uPassword)
+        UpdateLoginInfo(link,id,uPassword)
+
     else:
         print "Wrong Parameter Check keepitsafe -h"
 
