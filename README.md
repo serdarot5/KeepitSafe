@@ -16,42 +16,44 @@ sudo python install.py
 ```
 # Usage
 
+For help
+
 ![](https://media.giphy.com/media/aSvABumYAKSAkHRoJJ/giphy.gif)
 
-For help
 
 ```
 keepitsafe -h
 ```
 
+For save new login info (If you are not registered in program you need to set a password)
 
 ![](https://media.giphy.com/media/fnQkD1PydmR35MmdAO/giphy.gif)
 
-For save new login info
 
 ```
 keepitsafe -n
 ```
-If you are not registered in program you need to set a password
-
-
-![](https://media.giphy.com/media/4H3IgyCrQVU8JARrXk/giphy.gif)
 
 For see all saved login info
+![](https://media.giphy.com/media/4H3IgyCrQVU8JARrXk/giphy.gif)
+
 
 ```
 keepitsafe -s
 ```
-![](https://media.giphy.com/media/wONk0oY2Q8qQMdC0Az/giphy.gif)
 
 For update login info
+
+![](https://media.giphy.com/media/wONk0oY2Q8qQMdC0Az/giphy.gif)
+
 
 ```
 keepitsafe -u
 ```
+For delete login info
+
 ![](https://media.giphy.com/media/lo4LZztjfYBITqyLpy/giphy.gif)
 
-For delete login info
 
 ```
 keepitsafe -d
