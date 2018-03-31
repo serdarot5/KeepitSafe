@@ -51,12 +51,25 @@ def ShowLoginInfo(link,id,key):
             iv = password[:16]
             cipher = AES.new(key, AES.MODE_CBC, iv)
             password = cipher.decrypt(password[16:])
-            print "Record Number: "+str(i + 1) + ".  Service: " + service + "  Username: " + username + "  Password: " + password
+            print "Record Number: "+str(i + 1) + "  Service: " + service + "  Username: " + username + "  Password: " + password
+
+def ShowDelUpdateInfo(link,id):
+    link.execute("SELECT COUNT(*) FROM passwords")
+    (length,) = link.fetchone()
+    if (length == 0):
+        sys.exit("You don't have saved login info")
+    else:
+        link.execute("SELECT count(*) FROM passwords where u_id= ? ",(id,))
+        (length,) = link.fetchone()
+        link.execute("select * from passwords")
+        for i in range(length):
+            (service, username, password,id) = link.fetchone()
+            print "Record Number: "+str(i + 1) + "  Service: " + service + "  Username: " + username
 
 def NewLoginInfo(link,id,uPassword):
     service = raw_input("Service name: ")
     username = raw_input("Username: ")
-    password = raw_input("Password: ")
+    password = getpass.getpass(prompt='Password: ')
     iv = Random.new().read(AES.block_size)
     cipher = AES.new(uPassword, AES.MODE_CBC, iv)
     if (len(password) % 16 != 0):
@@ -108,7 +121,7 @@ def UpdateLoginInfo(link,id,uPassword):
             i=i+1
         service = raw_input("Service name: ")
         username = raw_input("Username: ")
-        password = raw_input("Password: ")
+        password = getpass.getpass(prompt='Password: ')
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(uPassword, AES.MODE_CBC, iv)
         if (len(password) % 16 != 0):
@@ -137,16 +150,16 @@ else:
     (length,) = link.fetchone()
     if length == 0:
         print "You are not registered with this user\n  "
-        uPassword = raw_input("Please enter new users password: ")
+        uPassword = getpass.getpass(prompt='Please enter new users password: ')
         while(len(uPassword)>32):
-            uPassword = raw_input("Your password can not be longer than 32 characters\nPlease enter new users password: ")
+            uPassword = getpass.getpass(prompt='Your password can not be longer than 32 characters\nPlease enter new users password:' )
         NewUser(link,username,uPassword)
     else:
         print"Welcome To Keep it Safe, Your Passwords encrypted with AES \n"
-        uPassword = raw_input("Enter Your Keep it Safe Password: ")
+        uPassword = getpass.getpass(prompt='Enter Your Keep it Safe Password: ')
         session = LogInToProgram(link,username,uPassword)
         while (session == False):
-            uPassword = raw_input("Your password is wrong please try again: ")
+            uPassword = getpass.getpass(prompt='Your password is wrong please try again:')
             session = LogInToProgram( link,username, uPassword)
     id = GetId(link, username)
     if (len(uPassword)%16!=0):
@@ -156,10 +169,10 @@ else:
     elif sys.argv[1] == "-n":
         NewLoginInfo(link,id,uPassword)
     elif sys.argv[1] == "-d":
-        ShowLoginInfo(link, id, uPassword)
+        ShowDelUpdateInfo(link, id)
         DeleteLoginInfo(link,id)
     elif sys.argv[1] == "-u":
-        ShowLoginInfo(link, id, uPassword)
+        ShowDelUpdateInfo(link, id)
         UpdateLoginInfo(link,id,uPassword)
 
     else:
